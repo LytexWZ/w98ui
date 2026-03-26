@@ -6,6 +6,20 @@ No external dependencies. Pure Win32. Drop in your CMake project and go.
 
 ---
 
+## Index
+
+- Features
+- Requirements
+- CMake Instructions
+- Quick Start
+- Architecture Overview
+- API Reference
+- Project Structure
+- Notes and Caveats
+- License
+
+---
+
 ## Features
 
 - Custom Windows 98 titlebar, borders, and caption buttons (close / max / min)
@@ -23,6 +37,37 @@ No external dependencies. Pure Win32. Drop in your CMake project and go.
 - Windows SDK (any recent version)
 - C++17 compiler (MSVC recommended)
 - CMake 3.10+
+
+---
+
+## CMake Instructions
+
+Build from the repository root:
+
+```powershell
+mkdir build
+cd build
+```
+
+Build from inside the `build` directory:
+
+```powershell
+cmake ..
+cmake --build . --config Release
+```
+
+Run the example app:
+
+```powershell
+cd build\example\Release
+.\example_app.exe
+```
+
+Final executable output path:
+
+- `w98\build\example\Release\example_app.exe`
+
+If your generator supports configurations, switch `Release` to `Debug` while iterating.
 
 ---
 
@@ -58,6 +103,45 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     return (int)msg.wParam;
 }
 ```
+
+---
+
+## Architecture Overview
+
+### 1) Widget layer
+
+All controls inherit from `w98::Widget`, which provides:
+
+- `HWND` storage and ID tracking
+- Preferred size metadata used by layouts
+- Message hooks (`HandleCommand`, `HandleScroll`) for event dispatch
+
+Concrete controls (`Button`, `CheckBox`, `TextBox`, `ComboBox`, etc.) wrap native Win32 controls and expose typed callbacks such as `OnClick` and `OnChange`.
+
+### 2) Layout layer
+
+`w98::Layout` owns and arranges `LayoutItem` entries:
+
+- `VBox`: vertical stacking
+- `HBox`: horizontal stacking
+- `GridLayout`: table-style placement with row/column spans
+- `Panel`: optional group box frame + child layout
+- `TabPanel`: native tab control + per-tab layout pages
+
+Layout options:
+
+- `expandH`, `expandV`: allow item expansion on each axis
+- `stretch`: proportional share of extra space among expandable peers
+- `padding`, `spacing`: outer/inner rhythm controls
+
+### 3) Window layer
+
+`w98::Window` hosts the full UI tree and handles:
+
+- Custom Win98 frame painting/title bar rendering
+- Caption button interaction (close/max/min)
+- Root layout calculation on resize
+- Widget event dispatch from Win32 message traffic
 
 ---
 
@@ -117,6 +201,28 @@ struct AppController {
 AppController ctrl{ myLabel };
 myButton.OnClick([&ctrl]{ ctrl.OnClick(); });
 ```
+
+---
+
+## Project Structure
+
+```text
+include/
+    w98ui.h        Public API declarations
+src/
+    w98ui.cpp      Library implementation
+example/
+    main.cpp       Demo app showing tabs, panels, events, and controller wiring
+```
+
+---
+
+## Notes and Caveats
+
+- This library targets Windows and native Win32 behavior.
+- Fonts are configured for a classic look (`MS Sans Serif`) to better match Win98-era visuals.
+- `TabPanel` and `Panel` are layout composites and are best used as structural containers in your layout tree.
+- For larger apps, keep behavior logic in a controller/service layer and let layout code focus on structure.
 
 ---
 
